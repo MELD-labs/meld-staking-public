@@ -1,0 +1,74 @@
+name: meld-staking-evm CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: self-hosted
+    if: ${{ !github.event.pull_request.draft }}
+    name: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3.1.0
+      - name: Setup node
+        uses: actions/setup-node@v3.5.1
+        with:
+          node-version: "16"
+      - name: Install dependencies
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: install # will run `yarn install` command
+      - name: Clean
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: clean # will run `yarn clean` command
+      - name: Compile
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: compile # will run `yarn compile` command
+      - name: Run linting and formatting
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: ts:check # will run `yarn ts:check` command
+      - name: Run solhint
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: solhint # will run `yarn solhint` command
+
+  test:
+    needs: build
+    runs-on: self-hosted
+    if: ${{ !github.event.pull_request.draft }}
+    name: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3.1.0
+      - name: Setup node
+        uses: actions/setup-node@v3.5.1
+        with:
+          node-version: "16"
+      - name: Install dependencies
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: install # will run `yarn install` command
+      - name: Clean
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: clean # will run `yarn clean` command
+      - name: Compile
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: compile # will run `yarn compile` command
+      - name: Unit Tests
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: test # will run `yarn test` command
